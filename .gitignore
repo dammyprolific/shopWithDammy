@@ -1,0 +1,27 @@
+# Python virtual environment
+venv/
+
+# Bytecode
+__pycache__/
+*.py[cod]
+
+# Django stuff
+*.log
+*.pot
+*.pyc
+db.sqlite3
+media/
+staticfiles/
+local_settings.py
+
+# Environment variables
+.env
+*.env
+
+# IDE/editor configs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
