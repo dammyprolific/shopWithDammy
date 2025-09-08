@@ -1,7 +1,7 @@
 from pathlib import Path
 from datetime import timedelta
 import os
-import dj_database_url
+# import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -74,25 +74,25 @@ WSGI_APPLICATION = 'ShopWithDammy.wsgi.application'
 # Database
 # Use DATABASE_URL from environment (for Render), fallback to local settings (for local dev)
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
+# DATABASE_URL = os.environ.get("DATABASE_URL")
 
-if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
+# if DATABASE_URL:
+#     DATABASES = {
+#         'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
+#     }
+# else:
+#     raise Exception("❌ DATABASE_URL environment variable is not set. Please add it in the Render Dashboard.")
+
+DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('POSTGRES_DB', 'Ecommerce_db'),
+            'USER': os.environ.get('POSTGRES_USER', 'postgres'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'function14'),
+            'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
+            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        }
     }
-else:
-    raise Exception("❌ DATABASE_URL environment variable is not set. Please add it in the Render Dashboard.")
-
-    # DATABASES = {
-    #     'default': {
-    #         'ENGINE': 'django.db.backends.postgresql',
-    #         'NAME': os.environ.get('POSTGRES_DB', 'Ecommerce_db'),
-    #         'USER': os.environ.get('POSTGRES_USER', 'postgres'),
-    #         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'function14'),
-    #         'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
-    #         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
-    #     }
-    # }
 
 # Password validators
 AUTH_PASSWORD_VALIDATORS = [
@@ -157,3 +157,5 @@ FLUTTERWAVE_SECRET_KEY = os.environ.get('FLUTTERWAVE_SECRET_KEY', 'FLWSECK_TEST-
 PAYPAL_CLIENT_ID = os.environ.get("PAYPAL_CLIENT_ID", "ARWe8mgWX6U5lYZOA2_eCEdCqn626MAykueQ0Chug-VqNDgJiIMlS5QrBRvr_Hh1R9KDlHpAeU0d3aC0")
 PAYPAL_SECRET_KEY = os.environ.get("PAYPAL_SECRET_KEY", "EBrLuxHP_VZUz7tMGKtDDprzV1yps3wIHXQzXwS_PAaOr77_CYFxZWv50fmmbnpWFaKdDnEBcX3WOWY5")
 PAYPAL_MODE = 'live'  # Change to 'sandbox' for testing
+
+REACT_BASE_URL = os.getenv("REACT_BASE_URL", "http://localhost:5173")
