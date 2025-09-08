@@ -1,7 +1,7 @@
 from pathlib import Path
 from datetime import timedelta
 import os
-# import dj_database_url
+import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -74,14 +74,14 @@ WSGI_APPLICATION = 'ShopWithDammy.wsgi.application'
 # Database
 # Use DATABASE_URL from environment (for Render), fallback to local settings (for local dev)
 
-# DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
-# if DATABASE_URL:
-#     DATABASES = {
-#         'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
-#     }
-# else:
-#     raise Exception("❌ DATABASE_URL environment variable is not set. Please add it in the Render Dashboard.")
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
+    }
+else:
+    raise Exception("❌ DATABASE_URL environment variable is not set. Please add it in the Render Dashboard.")
 
 DATABASES = {
         'default': {
