@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import timedelta
 import os
+import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,7 +14,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-default-dev-secret-key')
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') != 'False'  # Default True for dev; set to 'False' in prod
 
 ALLOWED_HOSTS = [
-    "shopwithdammy.onrender.com",
+    "shopwithdammy2.onrender.com",
     "localhost",
     "127.0.0.1",
 ]
@@ -76,9 +77,15 @@ DATABASES = {
         'NAME': os.environ.get('POSTGRES_DB', 'Ecommerce_db'),
         'USER': os.environ.get('POSTGRES_USER', 'postgres'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'function14'),
-        'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
+        # 'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
+}
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL')
+    )
 }
 
 # Password validators
