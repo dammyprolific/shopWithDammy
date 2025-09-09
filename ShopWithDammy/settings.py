@@ -83,16 +83,16 @@ if DATABASE_URL:
 else:
     raise Exception("❌ DATABASE_URL environment variable is not set. Please add it in the Render Dashboard.")
 
-DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('POSTGRES_DB', 'Ecommerce_db'),
-            'USER': os.environ.get('POSTGRES_USER', 'postgres'),
-            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'function14'),
-            'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
-            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
-        }
-    }
+# DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.postgresql',
+#             'NAME': os.environ.get('POSTGRES_DB', 'Ecommerce_db'),
+#             'USER': os.environ.get('POSTGRES_USER', 'postgres'),
+#             'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'function14'),
+#             'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
+#             'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+#         }
+#     }
 
 # Password validators
 AUTH_PASSWORD_VALIDATORS = [
