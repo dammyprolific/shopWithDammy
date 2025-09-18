@@ -32,14 +32,14 @@ paypalrestsdk.configure({
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def Products(request):
+def get_products(request):
     products = Products.objects.all()
     serializer = ProductsSerializer(products, many=True)
     return Response(serializer.data)
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def product_detail(request, slug):
+def get_product_detail(request, slug):
     product = get_object_or_404(Products, slug=slug)
     serializer = DetailProductSerializer(product)
     return Response(serializer.data)
