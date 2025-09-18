@@ -1,8 +1,7 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from django.conf import settings
 from django.shortcuts import get_object_or_404
@@ -12,7 +11,7 @@ import requests
 import paypalrestsdk
 
 from .models import Products, Cart, CartItem, Transaction
-from .serializers  import (
+from .serializers import (
     ProductsSerializer,
     DetailProductSerializer,
     CartItemSerializer,
@@ -24,15 +23,12 @@ from .serializers  import (
 
 BASE_URL = settings.BASE_URL
 
-# BASE_URL = settings.BASE_URL
-
-# ✅ Configure PayPal
+# Configure PayPal
 paypalrestsdk.configure({
     "mode": settings.PAYPAL_MODE,
     "client_id": settings.PAYPAL_CLIENT_ID,
     "client_secret": settings.PAYPAL_SECRET_KEY
 })
-
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -41,7 +37,6 @@ def Products(request):
     serializer = ProductsSerializer(products, many=True)
     return Response(serializer.data)
 
-
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def product_detail(request, slug):
@@ -49,10 +44,6 @@ def product_detail(request, slug):
     serializer = DetailProductSerializer(product)
     return Response(serializer.data)
 
-
-# --------------------
-# 🛒 CART
-# --------------------
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def add_item(request):
@@ -63,7 +54,6 @@ def add_item(request):
 
         if not cart_code or not product_id:
             return Response({"error": "cart_code and product_id are required."}, status=400)
-
         if quantity < 1:
             return Response({"error": "Quantity must be at least 1."}, status=400)
 
@@ -90,7 +80,6 @@ def add_item(request):
     except Exception as e:
         return Response({"error": f"Server error: {str(e)}"}, status=500)
 
-
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def check_product_in_cart(request):
@@ -108,7 +97,6 @@ def check_product_in_cart(request):
     except:
         return Response({"exists": False})
 
-
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_cart_stat(request):
@@ -123,7 +111,6 @@ def get_cart_stat(request):
     serializer = SimpleCartSerializer(cart)
     return Response(serializer.data)
 
-
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_cart(request):
@@ -137,7 +124,6 @@ def get_cart(request):
         return Response(serializer.data)
     except Cart.DoesNotExist:
         return Response({"error": "Cart not found."}, status=404)
-
 
 @api_view(["PATCH"])
 @permission_classes([AllowAny])
@@ -160,7 +146,6 @@ def update_quantity(request):
     except Exception as e:
         return Response({"error": str(e)}, status=400)
 
-
 @api_view(["DELETE"])
 @permission_classes([AllowAny])
 def delete_cartitem(request, item_id):
@@ -171,22 +156,16 @@ def delete_cartitem(request, item_id):
     except CartItem.DoesNotExist:
         return Response({'error': 'Item not found'}, status=404)
 
-
-# --------------------
-# 👤 USER
-# --------------------
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_username(request):
     return Response({"username": request.user.username})
-
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def user_info(request):
     serializer = UserSerializer(request.user)
     return Response(serializer.data)
-
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -200,9 +179,6 @@ def create_user(request):
         }, status=201)
     return Response({"error": serializer.errors}, status=400)
 
-# --------------------
-# 💵 PAYMENT (FLUTTERWAVE)
-# --------------------
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def initiate_payment(request):
@@ -210,7 +186,7 @@ def initiate_payment(request):
         user = request.user
         cart_code = request.data.get("cart_code")
         if not cart_code:
-            return Response({"error": "Cart code is required."}, status=400)
+            return Response({"error": "cart_code is required."}, status=400)
 
         cart = get_object_or_404(Cart, cart_code=cart_code)
 
@@ -253,15 +229,11 @@ def initiate_payment(request):
         response = requests.post("https://api.flutterwave.com/v3/payments", json=payload, headers=headers)
 
         if response.status_code in [200, 201]:
-            payment_link = response.json().get("data", {}).get("link")
-            if payment_link:
-                return Response({"payment_link": payment_link})
-            return Response({"error": "Payment link not provided."}, status=500)
+            return Response(response.json())
         return Response({"error": "Flutterwave API error", "details": response.json()}, status=response.status_code)
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
-
 
 @api_view(["GET", "POST"])
 def payment_callback(request):
@@ -291,26 +263,15 @@ def payment_callback(request):
         res_data = response.json()
 
         if res_data.get("status") == "success":
-            transaction = get_object_or_404(Transaction, ref=tx_ref)
-            data = res_data.get("data", {})
-
-            if (
-                data.get("status") == "successful"
-                and float(data.get("amount")) == float(transaction.amount)
-                and data.get("currency") == transaction.currency
-            ):
-                transaction.status = 'Completed'
+            # Mark transaction as complete
+            transaction = Transaction.objects.filter(ref=tx_ref).first()
+            if transaction:
+                transaction.status = "completed"
                 transaction.save()
-
                 cart = transaction.cart
                 cart.paid = True
-                cart.user = request.user
                 cart.save()
-
-                return Response({
-                    'message': 'Payment successful',
-                    'subMessage': 'Your payment was processed successfully.'
-                })
+            return Response({'message': 'Payment verified successfully'})
 
         return Response({
             'message': 'Payment verification failed',
@@ -323,16 +284,15 @@ def payment_callback(request):
             'subMessage': str(e)
         }, status=500)
 
-# --------------------
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def initiate_paypal_payment(request):
-    if not request.user.is_authenticated:
-        return Response({"error": "Unauthorized."}, status=401)
-
     try:
         user = request.user
         tx_ref = str(uuid.uuid4())
         cart_code = request.data.get("cart_code")
+        if not cart_code:
+            return Response({"error": "cart_code is required."}, status=400)
 
         cart = get_object_or_404(Cart, cart_code=cart_code)
         subtotal = sum(item.quantity * item.product.price for item in cart.items.all())
@@ -343,45 +303,45 @@ def initiate_paypal_payment(request):
             "intent": "sale",
             "payer": {"payment_method": "paypal"},
             "redirect_urls": {
-                "return_url": f"{BASE_URL}/payment-status?paymentStatus=success&ref={tx_ref}",
-                "cancel_url": f"{BASE_URL}/payment-status?paymentStatus=cancel"
+                "return_url": f"{BASE_URL}/paypal-payment-callback/?ref={tx_ref}",
+                "cancel_url": f"{BASE_URL}/paypal-payment-callback/?ref={tx_ref}"
             },
             "transactions": [{
                 "item_list": {
                     "items": [{
-                        "name": "cart_code",
+                        "name": "Cart Items",
                         "sku": "cart",
                         "price": str(total_amount),
-                        "currency": "NGN",
+                        "currency": "USD",
                         "quantity": 1
                     }]
                 },
                 "amount": {
                     "total": str(total_amount),
-                    "currency": "NGN"
+                    "currency": "USD"
                 },
-                "description": "Payment for cart items."
+                "description": "ShopNow Payment"
             }]
         })
 
         if payment.create():
             Transaction.objects.create(
                 ref=tx_ref,
-                user=user,
                 cart=cart,
+                user=user,
                 amount=total_amount,
-                currency="NGN",
-                status="Pending"
+                currency="USD",
+                status='pending'
             )
             for link in payment.links:
                 if link.rel == "approval_url":
                     return Response({"approval_url": str(link.href)})
-            return Response({"error": "Approval URL not found"}, status=400)
-        return Response({"error": "PayPal payment creation failed"}, status=500)
+            return Response({"error": "No approval URL found."}, status=400)
+        else:
+            return Response({"error": "PayPal payment creation failed.", "details": payment.error}, status=400)
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
-
 
 @api_view(["POST"])
 def paypal_payment_callback(request):
@@ -394,15 +354,13 @@ def paypal_payment_callback(request):
     if payment_id and payer_id:
         payment = paypalrestsdk.Payment.find(payment_id)
         if payment.execute({"payer_id": payer_id}):
-            transaction.status = "Completed"
+            transaction.status = "completed"
             transaction.save()
-
             cart = transaction.cart
             cart.paid = True
             if request.user.is_authenticated:
                 cart.user = request.user
             cart.save()
-
             return Response({"message": "Payment successful"})
         return Response({"error": "Payment execution failed"}, status=400)
 
