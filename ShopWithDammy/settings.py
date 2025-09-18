@@ -114,11 +114,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
 REACT_BASE_URL = os.environ.get("REACT_BASE_URL", "http://localhost:5173")
 
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
 CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://shop-c9zj.onrender.com",
+    "http://127.0.0.1:8000"
 ]
 
 REST_FRAMEWORK = {
