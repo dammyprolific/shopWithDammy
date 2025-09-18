@@ -36,7 +36,7 @@ paypalrestsdk.configure({
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def get_products(request):
+def Products(request):
     products = Products.objects.all()
     serializer = ProductsSerializer(products, many=True)
     return Response(serializer.data)
@@ -44,7 +44,7 @@ def get_products(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def get_product_detail(request, slug):
+def product_detail(request, slug):
     product = get_object_or_404(Products, slug=slug)
     serializer = DetailProductSerializer(product)
     return Response(serializer.data)
@@ -385,9 +385,9 @@ def initiate_paypal_payment(request):
 
 @api_view(["POST"])
 def paypal_payment_callback(request):
-    payment_id = request.query_params.get("paymentId")
-    payer_id = request.query_params.get("PayerID")
-    ref = request.query_params.get("ref")
+    payment_id = request.data.get("paymentId") or request.query_params.get("paymentId")
+    payer_id = request.data.get("PayerID") or request.query_params.get("PayerID")
+    ref = request.data.get("ref") or request.query_params.get("ref")
 
     transaction = get_object_or_404(Transaction, ref=ref)
 
@@ -399,7 +399,8 @@ def paypal_payment_callback(request):
 
             cart = transaction.cart
             cart.paid = True
-            cart.user = request.user
+            if request.user.is_authenticated:
+                cart.user = request.user
             cart.save()
 
             return Response({"message": "Payment successful"})
