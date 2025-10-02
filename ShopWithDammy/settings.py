@@ -1,7 +1,7 @@
 from pathlib import Path
 from datetime import timedelta
 import os
-# import dj_database_url
+import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -59,19 +59,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ShopWithDammy.wsgi.application'
 
-# Database configuration
-# DATABASE_URL = os.environ.get("DATABASE_URL")
-
+# Database configuration for Render
 DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME':'Ecommerce_db',
-            'USER':  'postgres',
-            'PASSWORD': 'function14',
-            'HOST': 'localhost',
-            'PORT': '5432',
-        }
-    }
+    'default': dj_database_url.parse(
+        os.environ.get("DATABASE_URL", "postgresql://ecommerce_db_48be_user:Wqof9zxSrsxnisRKf38ACBKencoeG8Sq@dpg-d2vgiqvfte5s73c3pa5g-a.oregon-postgres.render.com/ecommerce_db_48be")
+    )
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
@@ -85,17 +78,15 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-MEDIA_URL = 'img/'
+MEDIA_URL = '/img/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 AUTH_USER_MODEL = "coreUsers.CustomUsers"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
@@ -116,6 +107,16 @@ FLUTTERWAVE_SECRET_KEY = 'FLWSECK_TEST-5178b0f76422f10d30d9457cb284a344-X'
 
 PAYPAL_CLIENT_ID = 'ARWe8mgWX6U5lYZOA2_eCEdCqn626MAykueQ0Chug-VqNDgJiIMlS5QrBRvr_Hh1R9KDlHpAeU0d3aC0'
 PAYPAL_SECRET_KEY = 'EBrLuxHP_VZUz7tMGKtDDprzV1yps3wIHXQzXwS_PAaOr77_CYFxZWv50fmmbnpWFaKdDnEBcX3WOWY5'
-PAYPAL_MODE = 'sandbox'  # Change to 'sandbox' for testing
+PAYPAL_MODE = 'sandbox'  # Change to 'live' for production
 
 REACT_BASE_URL = os.getenv("REACT_BASE_URL", "http://localhost:5173")
+
+# Production security settings
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_SSL_REDIRECT = True
