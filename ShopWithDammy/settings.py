@@ -1,7 +1,7 @@
 from pathlib import Path
 from datetime import timedelta
 import os
-import dj_database_url
+# import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,7 +9,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'tw5^_afz6ck%p3g61nts3mo#jq85_*z1l-tmhqb$j7mi6j^%y!@#n'
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["shopwithdammy2.onrender.com", "localhost", "127.0.0.1"]
 
@@ -60,20 +60,16 @@ TEMPLATES = [
 WSGI_APPLICATION = 'ShopWithDammy.wsgi.application'
 
 # Database configuration
-DATABASE_URL = os.environ.get("DATABASE_URL")
-if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600)
-    }
-else:
-    DATABASES = {
+# DATABASE_URL = os.environ.get("DATABASE_URL")
+
+DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('POSTGRES_DB', 'Ecommerce_db'),
-            'USER': os.environ.get('POSTGRES_USER', 'postgres'),
-            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'function14'),
-            'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
-            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+            'NAME':'Ecommerce_db',
+            'USER':  'postgres',
+            'PASSWORD': 'function14',
+            'HOST': 'localhost',
+            'PORT': '5432',
         }
     }
 
