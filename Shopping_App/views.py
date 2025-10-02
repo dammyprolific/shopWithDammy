@@ -9,6 +9,7 @@ from decimal import Decimal
 import uuid
 import requests
 import paypalrestsdk
+from django.conf import settings
 
 from .models import Products, Cart, CartItem, Transaction
 from .serializers import (
@@ -21,7 +22,7 @@ from .serializers import (
     CustomUsersSerializer
 )
 
-BASE_URL = settings.BASE_URL
+BASE_URL = settings.REACT_BASE_URL
 
 # Configure PayPal
 paypalrestsdk.configure({
@@ -29,6 +30,7 @@ paypalrestsdk.configure({
     "client_id": settings.PAYPAL_CLIENT_ID,
     "client_secret": settings.PAYPAL_SECRET_KEY
 })
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])

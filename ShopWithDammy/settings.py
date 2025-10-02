@@ -8,21 +8,10 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-default-dev-secret-key')
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') != 'False'
+SECRET_KEY = 'tw5^_afz6ck%p3g61nts3mo#jq85_*z1l-tmhqb$j7mi6j^%y!@#n'
+DEBUG = True
 
-ALLOWED_HOSTS = [
-    "shopwithdammy2.onrender.com",
-    "localhost",
-    "127.0.0.1",
-]
-
-if not DEBUG:
-    import socket
-    try:
-        ALLOWED_HOSTS.append(socket.gethostbyname(socket.gethostname()))
-    except Exception:
-        pass
+ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -100,38 +89,27 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-MEDIA_URL = '/media/'
+STATIC_URL = '/static/'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+MEDIA_URL = '/img/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 AUTH_USER_MODEL = "coreUsers.CustomUsers"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
-REACT_BASE_URL = os.environ.get("REACT_BASE_URL", "http://localhost:5173")
-
-
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-
-CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://shop-c9zj.onrender.com",
-    "http://127.0.0.1:8000"
+    "https://shop-c9zj.onrender.com"
 ]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Or IsAuthenticated if you want global protection
     ],
 }
 
@@ -139,8 +117,10 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
 }
 
-FLUTTERWAVE_SECRET_KEY = os.environ.get('FLUTTERWAVE_SECRET_KEY', 'FLWSECK_TEST-5178b0f76422f10d30d9457cb284a344-X')
+FLUTTERWAVE_SECRET_KEY = 'FLWSECK_TEST-5178b0f76422f10d30d9457cb284a344-X'
 
-PAYPAL_CLIENT_ID = os.environ.get("PAYPAL_CLIENT_ID", "ARWe8mgWX6U5lYZOA2_eCEdCqn626MAykueQ0Chug-VqNDgJiIMlS5QrBRvr_Hh1R9KDlHpAeU0d3aC0")
-PAYPAL_SECRET_KEY = os.environ.get("PAYPAL_SECRET_KEY", "EBrLuxHP_VZUz7tMGKtDDprzV1yps3wIHXQzXwS_PAaOr77_CYFxZWv50fmmbnpWFaKdDnEBcX3WOWY5")
-PAYPAL_MODE = 'live'  # Change to 'sandbox' for testing
+PAYPAL_CLIENT_ID = 'ARWe8mgWX6U5lYZOA2_eCEdCqn626MAykueQ0Chug-VqNDgJiIMlS5QrBRvr_Hh1R9KDlHpAeU0d3aC0'
+PAYPAL_SECRET_KEY = 'EBrLuxHP_VZUz7tMGKtDDprzV1yps3wIHXQzXwS_PAaOr77_CYFxZWv50fmmbnpWFaKdDnEBcX3WOWY5'
+PAYPAL_MODE = 'sandbox'  # Change to 'sandbox' for testing
+
+REACT_BASE_URL = os.getenv("REACT_BASE_URL", "http://localhost:5173")
