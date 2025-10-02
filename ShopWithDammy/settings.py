@@ -3,15 +3,15 @@ from datetime import timedelta
 import os
 import dj_database_url
 from dotenv import load_dotenv
+from decouple import config
 
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("SECRET_KEY", "your-default-secret-key")
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"
-
-ALLOWED_HOSTS = ["shopwithdammy2.onrender.com", "localhost", "127.0.0.1"]
+SECRET_KEY = config("SECRET_KEY")
+DEBUG = config("DEBUG", default=False, cast=bool)
+ALLOWED_HOSTS = config("ALLOWED_HOSTS").split(",")
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -39,6 +39,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+ENV_MODE = os.getenv("ENV_MODE", "development")
+
+if ENV_MODE == "production":
+    load_dotenv(".env.production")
+else:
+    load_dotenv(".env.development")
+
 ROOT_URLCONF = 'ShopWithDammy.urls'
 
 TEMPLATES = [
@@ -59,12 +66,22 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ShopWithDammy.wsgi.application'
 
-# Database configuration for Render
-DATABASES = {
-    'default': dj_database_url.parse(
-        os.environ.get("DATABASE_URL", "postgresql://ecommerce_db_48be_user:Wqof9zxSrsxnisRKf38ACBKencoeG8Sq@dpg-d2vgiqvfte5s73c3pa5g-a.oregon-postgres.render.com/ecommerce_db_48be")
-    )
-}
+DATABASE_URL = config("DATABASE_URL", default=None)
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL)
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'Ecommerce_db',
+            'USER': 'postgres',
+            'PASSWORD': 'function14',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
@@ -103,13 +120,12 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
 }
 
-FLUTTERWAVE_SECRET_KEY = os.getenv("FLUTTERWAVE_SECRET_KEY", "'FLWSECK_TEST-5178b0f76422f10d30d9457cb284a344-X")
+FLUTTERWAVE_SECRET_KEY = config("FLUTTERWAVE_SECRET_KEY")
+PAYPAL_CLIENT_ID = config("PAYPAL_CLIENT_ID")
+PAYPAL_SECRET_KEY = config("PAYPAL_SECRET_KEY")
+PAYPAL_MODE = config("PAYPAL_MODE", default="sandbox")  # Change to 'live' for production
 
-PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "ARWe8mgWX6U5lYZOA2_eCEdCqn626MAykueQ0Chug-VqNDgJiIMlS5QrBRvr_Hh1R9KDlHpAeU0d3aC0")
-PAYPAL_SECRET_KEY = os.getenv("PAYPAL_SECRET_KEY", "EBrLuxHP_VZUz7tMGKtDDprzV1yps3wIHXQzXwS_PAaOr77_CYFxZWv50fmmbnpWFaKdDnEBcX3WOWY5")
-PAYPAL_MODE = os.getenv("PAYPAL_MODE", "sandbox")  # Change to 'live' for production
-
-REACT_BASE_URL = os.getenv("REACT_BASE_URL", "http://localhost:5173")
+REACT_BASE_URL = config("REACT_BASE_URL", default="http://localhost:5173")
 
 # Production security settings
 CSRF_COOKIE_SECURE = True
