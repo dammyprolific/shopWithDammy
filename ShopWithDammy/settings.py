@@ -9,6 +9,10 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+ENV_MODE = os.getenv("ENV_MODE", default="development")
+
+
+
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
 
@@ -44,13 +48,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ENV_MODE = os.getenv("ENV_MODE", "development")
-
-if ENV_MODE == "production":
-    load_dotenv(".env.production")
-else:
-    load_dotenv(".env.development")
-
 ROOT_URLCONF = 'ShopWithDammy.urls'
 
 TEMPLATES = [
@@ -71,20 +68,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ShopWithDammy.wsgi.application'
 
-DATABASE_URL = config("DATABASE_URL", default=None)
+DATABASE_URL = os.environ.get("DATABASE_URL")
 if DATABASE_URL:
     DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL)
+        'default': dj_database_url.config(conn_max_age=600)
     }
 else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'Ecommerce_db',
-            'USER': 'postgres',
-            'PASSWORD': 'function14',
-            'HOST': 'localhost',
-            'PORT': '5432',
+            'NAME': os.environ.get('POSTGRES_DB', 'Ecommerce_db'),
+            'USER': os.environ.get('POSTGRES_USER', 'postgres'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'function14'),
+            'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
+            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
         }
     }
 
@@ -132,12 +129,28 @@ PAYPAL_MODE = config("PAYPAL_MODE", default="sandbox")  # Change to 'live' for p
 
 REACT_BASE_URL = config("REACT_BASE_URL", default="http://localhost:5173")
 
+# ...existing code...
+ENV_MODE = os.getenv("ENV_MODE", "development")  # Add this line near the top
+
+# ...existing code...
+
 # Production security settings
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
-SECURE_SSL_REDIRECT = True
+if ENV_MODE == "production":
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = True
+else:
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+    SECURE_BROWSER_XSS_FILTER = False
+    SECURE_CONTENT_TYPE_NOSNIFF = False
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
+    SECURE_SSL_REDIRECT = False
+# ...existing code...
