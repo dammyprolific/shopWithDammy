@@ -1,3 +1,5 @@
+from rest_framework import generics, filters
+from rest_framework.pagination import PageNumberPagination
 from rest_framework import serializers
 from .models import Products, Cart, CartItem, ProductImage
 from django.contrib.auth import get_user_model
@@ -13,15 +15,43 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 class ProductsSerializer(serializers.ModelSerializer):
     extra_images = ProductImageSerializer(many=True, read_only=True)
+    uploaded_images = serializers.ListField(
+        child=serializers.ImageField(max_length=100000, allow_empty_file=False, use_url=False),
+        write_only=True,
+        required=False
+    )
     category_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Products
-        fields = ['id', 'name', 'slug', 'image', 'description', 'category', 'category_display', 'price', 'extra_images']
+        fields = ['id', 'name', 'slug', 'image', 'description', 'category', 'category_display', 'price', 'extra_images', 'uploaded_images']
 
     def get_category_display(self, obj):
         # Uses Django's built-in method to get the human-readable choice
         return obj.get_category_display()
+    
+    def create(self, validated_data):
+        uploaded_images = validated_data.pop('uploaded_images', [])
+        product = Products.objects.create(**validated_data)
+        for image in uploaded_images:
+            ProductImage.objects.create(product=product, image=image)
+        return product
+
+    def update(self, instance, validated_data):
+        uploaded_images = validated_data.pop('uploaded_images', [])
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        for image in uploaded_images:
+            ProductImage.objects.create(product=instance, image=image)
+    
+    
+class ProductsPagination(PageNumberPagination):
+    page_size = 10  # Default items per page
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 
 
 class DetailProductSerializer(serializers.ModelSerializer):

@@ -72,7 +72,7 @@ class CartItem(models.Model):
 class Transaction(models.Model):
     ref = models.CharField(max_length=225, unique=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='transactions')
+    cart = models.ForeignKey('Cart', on_delete=models.CASCADE, related_name='transactions')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=10, default='NGN')
     status = models.CharField(max_length=20, default='pending')
@@ -81,3 +81,7 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"Transaction {self.ref} - {self.status}"
+
+    def amount(self):
+        """Returns amount with comma formatting, e.g., 67,000,000.000"""
+        return "{:,.3f}".format(self.amount)

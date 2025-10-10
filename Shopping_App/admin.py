@@ -1,10 +1,8 @@
 from django.contrib import admin
 from .models import Products, Cart, CartItem, ProductImage
 from django.utils.html import format_html
-from django.contrib.admin.sites import AlreadyRegistered
 
-
-class ProductImageInline(admin.TabularInline):  # or StackedInline
+class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
 
@@ -18,14 +16,9 @@ class ProductAdmin(admin.ModelAdmin):
         if obj.image:
             return format_html('<img src="{}" width="100" />', obj.image.url)
         return "(No image)"
-    
     image_preview.short_description = 'Image Preview'
 
-# ✅ Register models properly
-try:
-    admin.site.register(Products, ProductAdmin)
-except AlreadyRegistered:
-    pass
+admin.site.register(Products, ProductAdmin)
 admin.site.register(Cart)
 admin.site.register(CartItem)
 admin.site.register(ProductImage)

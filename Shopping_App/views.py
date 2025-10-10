@@ -2,7 +2,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
-
+from rest_framework import generics, filters
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from decimal import Decimal
@@ -19,7 +20,8 @@ from .serializers import (
     CartSerializer,
     SimpleCartSerializer,
     UserSerializer,
-    CustomUsersSerializer
+    CustomUsersSerializer,
+    ProductsPagination
 )
 
 BASE_URL = settings.REACT_BASE_URL
@@ -36,6 +38,7 @@ paypalrestsdk.configure({
 @permission_classes([AllowAny])
 def get_products(request):
     products = Products.objects.all()
+    parser_classes = [MultiPartParser, FormParser]
     serializer = ProductsSerializer(products, many=True)
     return Response(serializer.data)
 
@@ -180,6 +183,13 @@ def create_user(request):
             "user": CustomUsersSerializer(user).data
         }, status=201)
     return Response({"error": serializer.errors}, status=400)
+
+class ProductsListView(generics.ListAPIView):
+    queryset = Products.objects.all()
+    serializer_class = ProductsSerializer
+    pagination_class = ProductsPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'description', 'category']
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])

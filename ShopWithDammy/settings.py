@@ -71,8 +71,8 @@ WSGI_APPLICATION = 'ShopWithDammy.wsgi.application'
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if DATABASE_URL:
     DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600)
-    }
+    'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+}
 else:
     DATABASES = {
         'default': {
@@ -101,7 +101,7 @@ STATIC_URL = '/static/'
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-MEDIA_URL = '/img/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 AUTH_USER_MODEL = "coreUsers.CustomUsers"
