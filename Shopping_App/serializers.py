@@ -17,6 +17,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 
 class ProductsSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
     extra_images = ProductImageSerializer(many=True, read_only=True)
     uploaded_images = serializers.ListField(
         child=serializers.ImageField(max_length=100000, allow_empty_file=False, use_url=False),
@@ -33,12 +34,16 @@ class ProductsSerializer(serializers.ModelSerializer):
             'category_display', 'formatted_price', 'extra_images', 'uploaded_images'
         ]
 
+    def get_image(self, obj):
+        if obj.image:
+            return obj.image.url  # ✅ CloudinaryField returns the full URL
+        return "https://res.cloudinary.com/dorjc6aib/image/upload/v123456/default.jpg"
+
     def get_category_display(self, obj):
         return obj.get_category_display()
 
     def get_formatted_price(self, obj):
-        # Use the model’s property or format here
-        return "{:,.2f}".format(obj.price)
+        return obj.formatted_price
 
     def create(self, validated_data):
         uploaded_images = validated_data.pop('uploaded_images', [])
@@ -56,6 +61,7 @@ class ProductsSerializer(serializers.ModelSerializer):
         for image in uploaded_images:
             ProductImage.objects.create(product=instance, image=image)
         return instance
+
     
     
 class ProductsPagination(PageNumberPagination):

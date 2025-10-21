@@ -44,7 +44,7 @@ class ProductImage(models.Model):
     product = models.ForeignKey(
         Products, on_delete=models.CASCADE, related_name='extra_images'
     )
-    image = models.ImageField(upload_to='img/extra/')
+    image = CloudinaryField('image')
 
     def __str__(self):
         return f"Extra Image for {self.product.name}"
