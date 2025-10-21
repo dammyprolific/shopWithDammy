@@ -8,6 +8,9 @@ User = get_user_model()
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
+    # Ensure URL is used for image
+    image = serializers.ImageField(use_url=True)
+
     class Meta:
         model = ProductImage
         fields = ['id', 'image']
@@ -21,15 +24,22 @@ class ProductsSerializer(serializers.ModelSerializer):
         required=False
     )
     category_display = serializers.SerializerMethodField()
+    formatted_price = serializers.SerializerMethodField()
 
     class Meta:
         model = Products
-        fields = ['id', 'name', 'slug', 'image', 'description', 'category', 'category_display', 'price', 'extra_images', 'uploaded_images']
+        fields = [
+            'id', 'name', 'slug', 'image', 'description', 'category',
+            'category_display', 'formatted_price', 'extra_images', 'uploaded_images'
+        ]
 
     def get_category_display(self, obj):
-        # Uses Django's built-in method to get the human-readable choice
         return obj.get_category_display()
-    
+
+    def get_formatted_price(self, obj):
+        # Use the model’s property or format here
+        return "{:,.2f}".format(obj.price)
+
     def create(self, validated_data):
         uploaded_images = validated_data.pop('uploaded_images', [])
         product = Products.objects.create(**validated_data)
@@ -45,6 +55,7 @@ class ProductsSerializer(serializers.ModelSerializer):
 
         for image in uploaded_images:
             ProductImage.objects.create(product=instance, image=image)
+        return instance
     
     
 class ProductsPagination(PageNumberPagination):
@@ -162,3 +173,5 @@ class CustomUsersSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+    
+    

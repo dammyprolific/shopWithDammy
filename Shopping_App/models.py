@@ -2,9 +2,6 @@ from django.db import models
 from django.utils.text import slugify
 from django.conf import settings
 
-
-
-
 class Products(models.Model):
     CATEGORY = [
         ("ELECTRONICS", "Electronics"),
@@ -13,11 +10,12 @@ class Products(models.Model):
         ("CARS", "Cars"),
         ("ACCESSORY", "Accessory"),
         ("PHONES", "Phones"),
+        ("OTHERS", "Others"),
     ]
 
     name = models.CharField(max_length=100)
     slug = models.SlugField(blank=True, null=True)
-    image = models.ImageField(upload_to="img")
+    image = models.ImageField(upload_to="products/")
     description = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.CharField(max_length=15, choices=CATEGORY, blank=True, null=True)
@@ -35,9 +33,16 @@ class Products(models.Model):
                 counter += 1
             self.slug = unique_slug
         super().save(*args, **kwargs)
-        
+
+    @property
+    def formatted_price(self):
+        return "{:,.2f}".format(self.price)
+
+
 class ProductImage(models.Model):
-    product = models.ForeignKey(Products, on_delete=models.CASCADE, related_name='extra_images')
+    product = models.ForeignKey(
+        Products, on_delete=models.CASCADE, related_name='extra_images'
+    )
     image = models.ImageField(upload_to='img/extra/')
 
     def __str__(self):
@@ -82,6 +87,7 @@ class Transaction(models.Model):
     def __str__(self):
         return f"Transaction {self.ref} - {self.status}"
 
-    def amount(self):
-        """Returns amount with comma formatting, e.g., 67,000,000.000"""
-        return "{:,.3f}".format(self.amount)
+    @property
+    def formatted_amount(self):
+        """Returns amount with comma formatting, e.g., 67,000,000.00"""
+        return "{:,.2f}".format(self.amount)

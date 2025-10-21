@@ -21,7 +21,7 @@ from .serializers import (
     SimpleCartSerializer,
     UserSerializer,
     CustomUsersSerializer,
-    ProductsPagination
+    ProductsPagination,
 )
 
 BASE_URL = settings.REACT_BASE_URL
@@ -36,7 +36,7 @@ paypalrestsdk.configure({
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def get_products(request):
+def get_Products(request):
     products = Products.objects.all()
     parser_classes = [MultiPartParser, FormParser]
     serializer = ProductsSerializer(products, many=True)
