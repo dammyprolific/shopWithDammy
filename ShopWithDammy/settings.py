@@ -105,9 +105,9 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Cloudinary: only enable cloud storage if keys are present
-CLOUD_NAME = config("CLOUDINARY_CLOUD_NAME", default=None)
-CLOUD_API_KEY = config("CLOUDINARY_API_KEY", default=None)
-CLOUD_API_SECRET = config("CLOUDINARY_API_SECRET", default=None)
+CLOUD_NAME = config("CLOUDINARY_CLOUD_NAME", default='')
+CLOUD_API_KEY = config("CLOUDINARY_API_KEY", default='')
+CLOUD_API_SECRET = config("CLOUDINARY_API_SECRET", default='')
 
 
 if CLOUD_NAME and CLOUD_API_KEY and CLOUD_API_SECRET:
