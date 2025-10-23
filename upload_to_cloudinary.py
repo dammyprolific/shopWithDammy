@@ -1,31 +1,40 @@
 import os
 import cloudinary
 import cloudinary.uploader
+from dotenv import load_dotenv
 
-# 🔐 Cloudinary configuration (replace with your actual credentials)
-cloudinary.config( 
-  cloud_name = 'dorjc6aib',        # e.g. 'mycloud123'
-  api_key = '713263282653134',
-  api_secret = 'LNsHUQ59xrnhyOgh_pdx3tm9Qq8'
+# Load environment variables
+load_dotenv()
+
+# Configure Cloudinary
+cloudinary.config(
+    cloud_name=os.getenv("CLOUD_NAME"),
+    api_key=os.getenv("API_KEY"),
+    api_secret=os.getenv("API_SECRET")
 )
 
-# 📂 Correct path to your images
+# Paths
 LOCAL_IMAGE_FOLDER = r"C:\Users\user\Desktop\Ecommerce\media\img"
-CLOUDINARY_FOLDER = "ecommerce_media"  # You can rename this
+CLOUDINARY_FOLDER = "ecommerce_media"
+VALID_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg')
 
-# ✅ Upload all image files from the folder
-for filename in os.listdir(LOCAL_IMAGE_FOLDER):
-    if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg')):
-        file_path = os.path.join(LOCAL_IMAGE_FOLDER, filename)
-        try:
-            print(f"Uploading {filename}...")
-            result = cloudinary.uploader.upload(
-                file_path,
-                folder=CLOUDINARY_FOLDER,
-                use_filename=True,
-                unique_filename=False
-            )
-            print(f"✅ Uploaded: {filename}")
-            print(f"🌐 URL: {result['secure_url']}\n")
-        except Exception as e:
-            print(f"❌ Failed to upload {filename}: {e}")
+# Upload all valid images recursively
+for root, _, files in os.walk(LOCAL_IMAGE_FOLDER):
+    for filename in files:
+        if filename.lower().endswith(VALID_EXTENSIONS):
+            local_path = os.path.join(root, filename)
+            relative_path = os.path.relpath(local_path, LOCAL_IMAGE_FOLDER)
+            cloudinary_path = os.path.join(CLOUDINARY_FOLDER, os.path.dirname(relative_path)).replace("\\", "/")
+
+            try:
+                print(f"🔼 Uploading: {relative_path}...")
+                result = cloudinary.uploader.upload(
+                    local_path,
+                    folder=cloudinary_path,
+                    use_filename=True,
+                    unique_filename=False
+                )
+                print(f"✅ Uploaded: {filename}")
+                print(f"📸 URL: {result['secure_url']}\n")
+            except Exception as e:
+                print(f"❌ Failed to upload {filename}: {e}")
