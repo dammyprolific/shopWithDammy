@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.pagination import PageNumberPagination
 from .models import Products, Cart, CartItem, ProductImage
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -12,7 +13,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductImage
-        fields = ['id', 'image']
+        fields = ["id", "image"]
 
 
 # ✅ Main Product Serializer
@@ -20,9 +21,11 @@ class ProductsSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()  # show image URL properly
     extra_images = ProductImageSerializer(many=True, read_only=True)
     uploaded_images = serializers.ListField(
-        child=serializers.ImageField(max_length=100000, allow_empty_file=False, use_url=False),
+        child=serializers.ImageField(
+            max_length=100000, allow_empty_file=False, use_url=False
+        ),
         write_only=True,
-        required=False
+        required=False,
     )
     category_display = serializers.SerializerMethodField()
     formatted_price = serializers.SerializerMethodField()
@@ -30,15 +33,24 @@ class ProductsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Products
         fields = [
-            'id', 'name', 'slug', 'image', 'description', 'category',
-            'category_display', 'formatted_price', 'extra_images', 'uploaded_images'
+            "id",
+            "name",
+            "slug",
+            "image",
+            "description",
+            "category",
+            "price",
+            "category_display",
+            "formatted_price",
+            "extra_images",
+            "uploaded_images",
         ]
 
     def get_image(self, obj):
-        if obj.image:
+        if getattr(obj, "image", None):
             try:
                 return obj.image.url  # ✅ Cloudinary gives full URL
-            except:
+            except Exception:
                 return None
         # Fallback default image
         return "https://res.cloudinary.com/dorjc6aib/image/upload/v123456/default.jpg"
@@ -47,17 +59,23 @@ class ProductsSerializer(serializers.ModelSerializer):
         return obj.get_category_display()
 
     def get_formatted_price(self, obj):
-        return obj.formatted_price  # property in model
+        # prefer model property if present, otherwise format numeric price
+        if hasattr(obj, "formatted_price") and obj.formatted_price is not None:
+            return obj.formatted_price
+        try:
+            return "{:,.2f}".format(obj.price)
+        except Exception:
+            return str(getattr(obj, "price", ""))
 
     def create(self, validated_data):
-        uploaded_images = validated_data.pop('uploaded_images', [])
+        uploaded_images = validated_data.pop("uploaded_images", [])
         product = Products.objects.create(**validated_data)
         for image in uploaded_images:
             ProductImage.objects.create(product=product, image=image)
         return product
 
     def update(self, instance, validated_data):
-        uploaded_images = validated_data.pop('uploaded_images', [])
+        uploaded_images = validated_data.pop("uploaded_images", [])
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
@@ -70,7 +88,7 @@ class ProductsSerializer(serializers.ModelSerializer):
 # ✅ Pagination
 class ProductsPagination(PageNumberPagination):
     page_size = 10
-    page_size_query_param = 'page_size'
+    page_size_query_param = "page_size"
     max_page_size = 100
 
 
@@ -81,7 +99,17 @@ class DetailProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Products
-        fields = ['id', 'name', 'price', 'slug', 'image', 'description', 'category', 'category_display', 'similar_products']
+        fields = [
+            "id",
+            "name",
+            "formatted_price",
+            "slug",
+            "image",
+            "description",
+            "category",
+            "category_display",
+            "similar_products",
+        ]
 
     def get_similar_products(self, obj):
         similar = Products.objects.filter(category=obj.category).exclude(id=obj.id)[:5]
@@ -101,6 +129,7 @@ class CartItemSerializer(serializers.ModelSerializer):
         fields = ["id", "quantity", "product", "total"]
 
     def get_total(self, obj):
+        # ensure numeric multiplication (price should be numeric in model)
         return obj.product.price * obj.quantity
 
 
@@ -112,9 +141,18 @@ class CartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cart
-        fields = ["id", "cart_code", "items", "sum_total", "num_of_items", "created_at", "modified_at"]
+        fields = [
+            "id",
+            "cart_code",
+            "items",
+            "sum_total",
+            "num_of_items",
+            "created_at",
+            "modified_at",
+        ]
 
     def get_sum_total(self, cart):
+        # use numeric price field to compute totals
         return sum(item.product.price * item.quantity for item in cart.items.all())
 
     def get_num_of_items(self, cart):
@@ -141,7 +179,7 @@ class NewCartItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CartItem
-        fields = ['id', 'product', 'quantity', 'order_id', 'order_date']
+        fields = ["id", "product", "quantity", "order_id", "order_date"]
 
     def get_order_id(self, obj):
         return obj.cart.cart_code
@@ -157,8 +195,16 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'username', 'first_name', 'last_name', 'email',
-            'city', 'state', 'address', 'phone', 'items'
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "city",
+            "state",
+            "address",
+            "phone",
+            "items",
         ]
 
     def get_items(self, user):
@@ -171,16 +217,53 @@ class CustomUsersSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'username', 'email', 'password',
-            'first_name', 'last_name', 'city', 'state', 'address', 'phone'
+            "username",
+            "email",
+            "password",
+            "first_name",
+            "last_name",
+            "city",
+            "state",
+            "address",
+            "phone",
         ]
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
+        extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
+        password = validated_data.pop("password")
         user = User(**validated_data)
         user.set_password(password)
         user.save()
         return user
+
+
+# OTP serializers required by views
+class OTPRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("No user with this email.")
+        return value
+
+
+class OTPVerifySerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(min_length=4, max_length=8)
+
+    def validate(self, data):
+        email = data.get("email")
+        otp = data.get("otp")
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User not found.")
+
+        if not getattr(user, "otp_code", None) or str(user.otp_code) != str(otp):
+            raise serializers.ValidationError("Invalid OTP.")
+
+        if not getattr(user, "otp_expiry", None) or user.otp_expiry < timezone.now():
+            raise serializers.ValidationError("OTP has expired.")
+
+        return data

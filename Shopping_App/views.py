@@ -88,20 +88,16 @@ def add_item(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def check_product_in_cart(request):
+    
     cart_code = request.query_params.get("cart_code")
     product_id = request.query_params.get("product_id")
-
-    if not cart_code or not product_id:
-        return Response({"error": "Missing cart_code or product_id"}, status=400)
-
-    try:
-        cart = Cart.objects.get(cart_code=cart_code, paid=False)
-        product = Products.objects.get(id=product_id)
-        exists = CartItem.objects.filter(cart=cart, product=product).exists()
-        return Response({"exists": exists})
-    except:
-        return Response({"exists": False})
-
+    
+    cart = Cart.objects.get(cart_code=cart_code)
+    product_id = Products.objects.get(id=product_id)
+    
+    product_exists_in_cart = CartItem.objects.filter(cart=cart, product=product_id).exists()
+    
+    return Response({"exists": product_exists_in_cart})
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_cart_stat(request):
@@ -203,7 +199,7 @@ def initiate_payment(request):
         cart = get_object_or_404(Cart, cart_code=cart_code)
 
         subtotal = sum(item.quantity * item.product.price for item in cart.items.all())
-        tax = Decimal('1000.00')
+        tax = Decimal('1500.00')
         total = subtotal + tax
         currency = "NGN"
         tx_ref = str(uuid.uuid4())
@@ -241,7 +237,10 @@ def initiate_payment(request):
         response = requests.post("https://api.flutterwave.com/v3/payments", json=payload, headers=headers)
 
         if response.status_code in [200, 201]:
-            return Response(response.json())
+            payment_link = response.json().get("data", {}).get("link")
+            if payment_link:
+                return Response({"payment_link": payment_link})
+            return Response({"error": "Payment link not provided."}, status=500)
         return Response({"error": "Flutterwave API error", "details": response.json()}, status=response.status_code)
 
     except Exception as e:
@@ -275,15 +274,26 @@ def payment_callback(request):
         res_data = response.json()
 
         if res_data.get("status") == "success":
-            # Mark transaction as complete
-            transaction = Transaction.objects.filter(ref=tx_ref).first()
-            if transaction:
-                transaction.status = "completed"
+            transaction = get_object_or_404(Transaction, ref=tx_ref)
+            data = res_data.get("data", {})
+
+            if (
+                data.get("status") == "successful"
+                and float(data.get("amount")) == float(transaction.amount)
+                and data.get("currency") == transaction.currency
+            ):
+                transaction.status = 'Completed'
                 transaction.save()
+
                 cart = transaction.cart
                 cart.paid = True
+                cart.user = request.user
                 cart.save()
-            return Response({'message': 'Payment verified successfully'})
+
+            return Response({
+            'message': 'Payment successful',
+            'subMessage': 'Your transaction has been completed successfully.'
+        })
 
         return Response({
             'message': 'Payment verification failed',
@@ -368,11 +378,12 @@ def paypal_payment_callback(request):
         if payment.execute({"payer_id": payer_id}):
             transaction.status = "completed"
             transaction.save()
+            
             cart = transaction.cart
             cart.paid = True
-            if request.user.is_authenticated:
-                cart.user = request.user
+            cart.user = request.user
             cart.save()
+
             return Response({"message": "Payment successful"})
         return Response({"error": "Payment execution failed"}, status=400)
 

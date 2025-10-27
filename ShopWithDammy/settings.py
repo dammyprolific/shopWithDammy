@@ -168,6 +168,8 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_SSL = config("EMAIL_USE_SSL", default=False, cast=bool)
 
 FLUTTERWAVE_SECRET_KEY = config("FLUTTERWAVE_SECRET_KEY", default="")
+FLUTTERWAVE_PUBLIC_KEY = config("FLUTTERWAVE_PUBLIC_KEY", default="")
+
 PAYPAL_CLIENT_ID = config("PAYPAL_CLIENT_ID", default="")
 PAYPAL_SECRET_KEY = config("PAYPAL_SECRET_KEY", default="")
 PAYPAL_MODE = config("PAYPAL_MODE", default="sandbox")
